@@ -7,6 +7,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(p8105.datasets)
+library(modelr)
 ```
 ## Load and clean the Airbnb data
 ```{r}
@@ -56,10 +57,75 @@ fit =
   mutate(
     borough = fct_infreq(borough),
     room_type = fct_infreq(room_type)
-  )
+  )|>
   lm(price ~ stars + borough + room_type, data = _)
 
 fit|>
   broom::tidy()
 ```
+
+
+## quick look at diagnostis
+
+```{r}
+modelr::add_residuals(nyc_airbnb, fit)
+modelr::add_predictions(nyc_airbnb, fit)
+```
+```{r}
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  ggplot(aes(x = stars, y = resid)) + geom_point()
+```
+```{r}
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  ggplot(aes(x = borough, y = resid)) + geom_violin()
+```
+
+## Hypothesis test for categorical predictor
+
+```{r}
+fit|>
+  broom::tidy()
+```
+
+```{r}
+fit_null = lm(price ~ stars + borough, data = nyc_airbnb)
+fit_alternative = lm(price ~ stars + borough + room_type, data = nyc_airbnb)
+
+anova(fit_null, fit_alternative)|>
+  broom::tidy()
+```
+
+## Borough-level differences 
+
+```{r}
+fit = 
+  nyc_airbnb|>
+  lm(price = stars*borough + room_type*borough, data = _)
+
+fit|>
+  broom::tidy()
+```
+
+```{r}
+airbnb_lm = function(df){
+  lm(price ~ stars + room_type, data = df)
+}
+
+nyc_airbnb|>
+  nest(df = -borough)|>
+  mutate(models = map(df, airbnb_lm),
+         results = map(models, broom::tidy))|>
+  select(borough, results)|>
+  unnest(results)|>
+  select(borough, term, estimate)|>
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  )|>
+  knitr::kable(digits = 2)
+```
+
+
 
