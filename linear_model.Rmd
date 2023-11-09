@@ -127,5 +127,8 @@ nyc_airbnb|>
   knitr::kable(digits = 2)
 ```
 
+## binary outcome (去看课件，这个data set mac上下载有问题)
+
+
 
 
