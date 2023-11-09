@@ -1,0 +1,65 @@
+---
+title: "linear_model"
+author: "Tianyou He"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+```
+## Load and clean the Airbnb data
+```{r}
+data("nyc_airbnb")
+```
+
+```{r}
+nyc_airbnb = 
+  nyc_airbnb |>
+  mutate(stars = review_scores_location /2)|>
+  select(
+    price, stars, borough = neighbourhood_group, neighbourhood, room_type
+  )|>
+  filter(borough != "Staten Island")
+```
+
+lets fit the linear model
+
+```{r}
+fit = 
+  nyc_airbnb|>
+  lm(price ~ stars + borough, data = _)
+fit
+```
+look at fit
+```{r}
+fit
+summary(fit)
+summary(fit)$coef
+coef(fit)
+## fitted.values(fit)
+```
+
+tidy up the output
+
+```{r}
+fit |> 
+  broom::tidy() |> 
+  select(term, estimate, p.value) |> 
+  mutate(term = str_replace(term, "^borough", "Borough: ")) |> 
+  knitr::kable(digits = 3)
+```
+
+```{r}
+fit = 
+  nyc_airbnb|>
+  mutate(
+    borough = fct_infreq(borough),
+    room_type = fct_infreq(room_type)
+  )
+  lm(price ~ stars + borough + room_type, data = _)
+
+fit|>
+  broom::tidy()
+```
+
