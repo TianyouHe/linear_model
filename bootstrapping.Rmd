@@ -70,3 +70,7 @@ sim_df_nonconst|>
   stat_smooth(method = "lm")
 ```
 
+```{r}
+
+```
+
