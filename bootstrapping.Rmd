@@ -1,5 +1,5 @@
 ---
-title: "corss validation"
+title: "Bootstrapping"
 output: github_document
 ---
 
@@ -70,7 +70,59 @@ sim_df_nonconst|>
   stat_smooth(method = "lm")
 ```
 
+## Draw a lot of samples and analyze them
 ```{r}
+boot_straps = 
+  tibble(strap_number = 1:2500)|>
+  mutate(strap_sample = map(strap_number, \(i) boot_sample(sim_df_nonconst)))
 
+boot_straps|>
+  pull(strap_sample)|>
+  nth(1)|>
+  arrange(x)
 ```
+
+
+now do the `lm` fit
+
+```{r}
+boot_results = 
+  boot_straps|>
+  mutate(
+    models = map(strap_sample, \(df) lm(y~x, data = df)),
+    result = map(models, broom::tidy)
+  )|>
+  select(strap_number, result)|>
+  unnest(result)
+    
+```
+
+try to summarize these results -- get a bootstrap SE
+
+```{r}
+boot_results|>
+  group_by(term)|>
+  summarise(
+    sd = sd(estimate)
+  )
+```
+
+look at distribution
+```{r}
+boot_results|>
+  filter(term =="x")|>
+  ggplot(aes(x = estimate)) +
+  geom_density()
+```
+
+can I construct a CI
+
+```{r}
+boot_results |> 
+  group_by(term) |> 
+  summarize(
+    ci_lower = quantile(estimate, 0.025), 
+    ci_upper = quantile(estimate, 0.975))
+```
+
 
