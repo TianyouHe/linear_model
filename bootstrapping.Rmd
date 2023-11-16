@@ -32,3 +32,41 @@ sim_df_const|>
   ggplot(aes(x = x, y = y)) + geom_point()
 ```
 
+
+fit some linear models
+
+```{r}
+sim_df_const|>
+  lm(y ~ x, data = _)|>
+  broom::tidy()|>
+  knitr::kable(digits = 3)
+
+sim_df_nonconst|>
+  lm(y ~ x, data = _)|>
+  broom::tidy()|>
+  knitr::kable(digits = 3)
+```
+
+
+## Draw and analyze a bootstrap sample
+
+start with a lil function
+
+```{r}
+boot_sample = function(df){
+  
+  sample_frac(df, replace = TRUE)
+  
+}
+```
+
+lets see how this work
+
+```{r}
+sim_df_nonconst|>
+  boot_sample()|>
+  ggplot(aes(x = x, y = y)) + 
+  geom_point(alpha = .5)+
+  stat_smooth(method = "lm")
+```
+
